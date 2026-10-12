@@ -102,3 +102,5 @@ forge-engine/
 ## Licence
 
 MIT
+
+## continuer ce code avec mistral  https://chat.mistral.ai/work/e0b74768-d968-49bb-9428-3104dab217bf

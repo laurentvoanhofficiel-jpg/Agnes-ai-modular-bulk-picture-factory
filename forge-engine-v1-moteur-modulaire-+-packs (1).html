@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Forge Engine v1 — moteur + packs</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+--bg:#0d0d0f;--bg2:#141417;--bg3:#1c1c21;--line:#26262c;--line2:#33333c;
+--fg:#f2f2f4;--fg2:#b8b8c0;--mut:#7c7c88;--faint:#55555f;
+--gold:#e6b45a;--ok:#4cc38a;--err:#e05555;--warn:#d8983f;
+--r:14px;--rs:10px;--mono:ui-monospace,Menlo,Consolas,monospace;
+}
+html,body{background:var(--bg);color:var(--fg)}
+body{font:15px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:920px;margin:0 auto;padding-bottom:120px;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea,select{font-family:inherit;color:var(--fg)}
+img{display:block;max-width:100%}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px}
+header{position:sticky;top:0;z-index:50;background:rgba(13,13,15,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+header h1{font-size:18px;font-weight:800;letter-spacing:-.02em}
+header h1 em{color:var(--gold);font-style:normal}
+header .sub{font-size:11px;color:var(--mut);margin-top:1px}
+.statchip{display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:100px;background:var(--bg3);border:1px solid var(--line);font-size:12px;font-weight:600;white-space:nowrap}
+main{padding:14px 16px}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px;overflow:hidden}
+.card summary{padding:14px 16px;cursor:pointer;user-select:none;list-style:none;display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px}
+.card summary::-webkit-details-marker{display:none}
+.card summary .cnt{font-size:11px;font-weight:700;padding:3px 9px;border-radius:100px;background:var(--bg3);color:var(--mut);margin-left:auto}
+.card .content{padding:0 16px 16px}
+.f{margin-bottom:14px}
+.f label{display:block;font-size:11px;font-weight:700;color:var(--fg2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.f .hint{font-size:11.5px;color:var(--mut);margin-top:5px;line-height:1.45}
+input[type=text],input[type=number],textarea,select{width:100%;padding:11px 13px;border:1px solid var(--line2);border-radius:var(--rs);background:var(--bg3);color:var(--fg);font-size:14px;appearance:none}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold)}
+textarea{font-family:var(--mono);font-size:12px;min-height:76px;resize:vertical;line-height:1.55}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:var(--rs);border:1px solid var(--line2);background:var(--bg3);color:var(--fg);font-size:14px;font-weight:700;min-height:48px;transition:.15s}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.gold{background:var(--gold);color:#1a1408;border-color:var(--gold)}
+.btn.dng{border-color:rgba(224,85,85,.5);color:var(--err)}
+.btn.sm{width:auto;padding:8px 13px;min-height:38px;font-size:12.5px;border-radius:100px}
+.brow{display:flex;gap:8px}.brow .btn{flex:1}
+.keyslist{max-height:220px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--rs);margin-top:10px;background:var(--bg3)}
+.kitem{display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid var(--line);font-size:12px}
+.kitem:last-child{border:0}
+.kst{font-size:9.5px;font-weight:800;padding:3px 8px;border-radius:100px;text-transform:uppercase;flex-shrink:0}
+.kst.ok{background:rgba(76,195,138,.14);color:var(--ok)}
+.kst.cool{background:rgba(216,152,63,.14);color:var(--warn)}
+.kst.dead{background:rgba(224,85,85,.14);color:var(--err)}
+.drop{position:relative;border:2px dashed var(--line2);border-radius:var(--r);padding:26px 18px;text-align:center;cursor:pointer;transition:.15s}
+.drop:hover{border-color:var(--gold)}
+.drop input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:2}
+.drop .ti{font-weight:700}
+.drop .de{font-size:12px;color:var(--mut);margin-top:3px;line-height:1.4}
+.pack{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:var(--rs);background:var(--bg3);margin-bottom:8px}
+.pack .pi{font-size:22px}
+.pack .pt{flex:1;min-width:0}
+.pack .pn{font-weight:700;font-size:13.5px}
+.pack .pd{font-size:11.5px;color:var(--mut);margin-top:2px;line-height:1.4}
+.pill{display:inline-block;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;background:rgba(230,180,90,.9);color:#1a1408;margin-right:4px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{padding:8px 13px;border-radius:100px;border:1px solid var(--line2);background:var(--bg3);color:var(--fg2);font-size:12.5px;font-weight:600}
+.seg button.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+#stream{display:flex;flex-direction:column;gap:14px}
+.node.child{margin-left:20px;padding-left:14px;border-left:2px solid var(--line2)}
+.blk{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;animation:bIn .3s ease}
+@keyframes bIn{from{opacity:0;transform:translateY(8px)}}
+.blk.err{border-color:rgba(224,85,85,.5)}
+.bhead{padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.bcat{padding:3px 9px;border-radius:100px;background:var(--fg);color:var(--bg);font-size:10px;font-weight:800;text-transform:uppercase}
+.bname{flex:1;min-width:110px;font-weight:700;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btime{font-size:10.5px;color:var(--faint);font-family:var(--mono)}
+.bimg{background:#000;display:flex;align-items:center;justify-content:center;min-height:180px;position:relative}
+.bimg img{width:100%;height:auto;max-height:74vh;object-fit:contain}
+.bimg .load{width:26px;height:26px;border:3px solid var(--line2);border-top-color:var(--gold);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.bimg .errmsg{padding:20px;text-align:center;color:var(--err);font-size:12.5px}
+.bacts{display:flex;gap:6px;overflow-x:auto;padding:10px 12px;border-top:1px solid var(--line)}
+.bact{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:100px;border:1px solid var(--line2);background:var(--bg3);color:var(--fg2);font-size:12px;font-weight:700}
+.bmsg{margin:10px 12px 0;padding:9px 12px;border-radius:var(--rs);font-size:12.5px;display:none}
+.bmsg.on{display:block}
+.bmsg.ok{background:rgba(76,195,138,.12);color:var(--ok)}
+.bmsg.err{background:rgba(224,85,85,.12);color:var(--err)}
+.empty{text-align:center;padding:50px 20px;color:var(--faint);font-size:13px;line-height:1.6}
+#toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-120px);background:var(--fg);color:#0a0a0c;padding:11px 18px;border-radius:100px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:.28s;max-width:88vw}
+#toast.on{opacity:1;transform:translateX(-50%)}
+#toast.err{background:var(--err);color:#fff}
+#toast.warn{background:var(--warn);color:#fff}
+#bar{position:fixed;bottom:0;left:0;right:0;max-width:920px;margin:0 auto;background:rgba(13,13,15,.96);backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:10px 16px 14px;z-index:60;display:flex;align-items:center;gap:10px}
+.bbtn{width:48px;height:48px;border-radius:var(--rs);border:1px solid var(--line2);background:var(--bg3);font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bbtn.play{background:var(--gold);color:#1a1408;border-color:var(--gold)}
+.bbtn:disabled{opacity:.35}
+.binfo{flex:1;min-width:0}
+.binfo .stt{font-size:11.5px;color:var(--mut);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prog{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-top:6px}
+.prog i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s}
+#log{max-height:150px;overflow-y:auto;background:var(--bg2);border:1px solid var(--line);border-radius:var(--rs);padding:8px 12px;font-family:var(--mono);font-size:10.5px;line-height:1.6;color:var(--fg2);margin-top:10px}
+#log .l.e{color:var(--err)}
+#log .l.s{color:var(--ok)}
+#log .l.w{color:var(--warn)}
+</style>
+</head>
+<body>
+
+<header>
+<div>
+<h1>Forge <em>Engine</em> v1</h1>
+<p class="sub">Moteur neutre · les capacités viennent des packs installés</p>
+</div>
+<div class="statchip"><span id="chipPacks">0 pack</span></div>
+</header>
+
+<main>
+
+<details class="card" open>
+<summary>🔑 Clés & API <span class="arr" style="margin-left:auto;color:var(--faint)">▾</span></summary>
+<div class="content">
+<div class="f">
+<label>Clés API (une par ligne, préfixe sk-)</label>
+<textarea id="keysIn" rows="3" placeholder="sk-xxxx" spellcheck="false"></textarea>
+<div class="hint" id="keysHint">Rotation auto · cooldown 65 s sur 429.</div>
+</div>
+<div class="f">
+<label>Endpoint API</label>
+<input type="text" id="endpoint" spellcheck="false">
+</div>
+<div class="brow">
+<div class="f" style="flex:1"><label>Modèle texte</label><input type="text" id="mtx" spellcheck="false"></div>
+<div class="f" style="flex:1"><label>Modèle image</label><input type="text" id="mimg" spellcheck="false"></div>
+</div>
+<button class="btn" id="saveApi">💾 Sauvegarder la connexion</button>
+</div>
+</details>
+
+<details class="card" open>
+<summary>📦 Packs installés <span class="cnt" id="packBadge">0</span></summary>
+<div class="content">
+<div id="packList"></div>
+<div class="hint" style="margin:8px 0 12px">Le moteur ne fait rien tant qu'aucun pack n'est installé. Installe un pack ci-dessous, ou fabrique-en un avec l'IA.</div>
+<div class="brow">
+<button class="btn" id="impPackBtn">📥 Importer un pack (JSON)</button>
+<button class="btn gold" id="genPackBtn">✨ Créer un pack avec l'IA</button>
+</div>
+<input type="file" id="packFile" accept=".json,application/json" style="display:none">
+</div>
+</details>
+
+<details class="card" open id="forgeCard">
+<summary>🎬 Forge <span class="arr" style="margin-left:auto;color:var(--faint)">▾</span></summary>
+<div class="content">
+
+<div class="f">
+<label>Pack actif</label>
+<select id="packSel"></select>
+<div class="hint" id="packHint"></div>
+</div>
+
+<div class="f">
+<label>Recette (action proposée par le pack actif)</label>
+<select id="recipeSel"></select>
+<div class="hint" id="recipeHint"></div>
+</div>
+
+<div class="f">
+<label>Entrée — image de référence</label>
+<div class="drop" id="drop">
+<input type="file" accept="image/*" id="fileIn">
+<div class="ti">🎬 Charger une image (optionnel selon la recette)</div>
+<div class="de" id="dropDe">Certaines recettes travaillent sans image : le texte suffit.</div>
+</div>
+</div>
+
+<div class="f">
+<label>Entrée — texte / brief / scénario</label>
+<textarea id="briefIn" rows="3" placeholder="Décris la scène, colle un scénario, un poème, un brief… selon la recette choisie." spellcheck="false"></textarea>
+</div>
+
+<div class="f">
+<label>Nombre d'images</label>
+<div class="seg" id="batchSeg">
+<button data-v="6">6</button>
+<button data-v="10" class="on">10</button>
+<button data-v="20">20</button>
+<button data-v="40">40</button>
+</div>
+</div>
+
+<div class="f">
+<label>Format</label>
+<select id="ratio">
+<option value="1:1" selected>⬛ 1:1</option>
+<option value="9:16">📱 9:16</option>
+<option value="16:9">🖥️ 16:9</option>
+<option value="4:3">🖼️ 4:3</option>
+<option value="3:4">📖 3:4</option>
+<option value="mixed">🎲 Mélangé</option>
+</select>
+</div>
+
+<button class="btn gold" id="startBtn">⚡ EXÉCUTER LA RECETTE</button>
+</div>
+</details>
+
+<details class="card">
+<summary>🛠 Journal <span class="arr" style="margin-left:auto;color:var(--faint)">▾</span></summary>
+<div class="content"><div id="log"></div></div>
+</details>
+
+<section id="stream"></section>
+<div class="empty" id="empty">Le moteur tourne à vide. Installe un pack, choisis une recette, exécute.</div>
+
+</main>
+
+<nav id="bar">
+<button class="bbtn play" id="playBtn" disabled>▶</button>
+<div class="binfo">
+<div class="stt" id="bStat">Prêt</div>
+<div class="prog"><i id="bProg"></i></div>
+</div>
+</nav>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* ════════════════════════════════════════════════════════════════
+   FORGE ENGINE v1 — moteur neutre + système de packs
+   ──────────────────────────────────────────────────────────────
+   Principe : ce fichier ne sait RIEN faire par lui-même.
+   Toute capacité (styles, recettes, profils, entrées) est déclarée
+   dans des packs JSON installables, éditables et générables par IA.
+   Un pack peut être n'importe quoi : photographes, scénaristes,
+   monétisation, galerie, usages sectoriels... 220 propositions ou
+   2000 : il suffit d'écrire un pack.
+════════════════════════════════════════════════════════════════ */
+
+/* ── OUTILS ─────────────────────────────────────────────────────── */
+function $(id){return document.getElementById(id)}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})}
+function rnd(a){return a[Math.floor(Math.random()*a.length)]}
+
+var toastT;
+function toast(m,t){var el=$('toast');el.textContent=m;el.className='on '+(t||'');clearTimeout(toastT);toastT=setTimeout(function(){el.className=''},2800)}
+function log(m,lv){var c=$('log');if(!c)return;var d=document.createElement('div');d.className='l '+(lv||'');d.textContent=m;c.appendChild(d);while(c.children.length>200)c.removeChild(c.firstChild);c.scrollTop=c.scrollHeight}
+function saveLS(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function loadLS(k,d){try{var r=localStorage.getItem(k);return r?JSON.parse(r):d}catch(e){return d}}
+
+/* ── ÉTAT DU MOTEUR ────────────────────────────────────────────── */
+var st={
+keys:[],api:{endpoint:'https://apihub.agnes-ai.com/v1',mtx:'agnes-2.5-flash',mimg:'agnes-image-2.1-flash'},
+packs:[],           /* packs installés (JSON complets) */
+img:null,           /* dataURL de l'image de référence */
+batch:10,ratio:'1:1',
+running:false,stop:false,
+count:0,total:0
+};
+var queue=[],workers=[];
+
+/* ════════════════════════════════════════════════════════════════
+   1. SCHÉMA DE PACK — documentation vivante du moteur
+═════════════════════════════════════════════════════════════════
+{
+  "id":"mon-pack",           // unique
+  "name":"Nom du pack",
+  "icon":"📸",
+  "desc":"Ce que couvre ce pack.",
+  "profiles":["scenariste","realisateur"],   // optionnel : métiers
+  "styles":[                               // fiches de style normalisées
+    {"id":"lei1","cat":"photographes","name":"Annie Leibovitz","prompt":"..."},
+    ...
+  ],
+  "layers":{                               // bibliothèques combinables
+    "locations":["in a quiet gallery", ...],
+    "lights":["candlelit", ...],
+    "compositions":["dignified frontal portrait", ...],
+    "moods":["contemplative", ...]
+  },
+  "recipes":[                              // CAPACITÉS : ce que le pack sait faire
+    {
+      "id":"serie",
+      "name":"Série de portraits stylés",
+      "hint":"10 à 40 images, un style par image",
+      "inputs":["image"],                  // requis : "image" et/ou "text"
+      "source":"image",                    // quoi utiliser comme source : "image"|"generated"
+      "count":true,                        // le champ Nombre s'applique
+      "steps":[                            // pipeline de composition de prompt
+        {"use":"face"},                    // bloc du pack (text.blocks.face)
+        {"use":"variations"},
+        {"style":true},                    // injecte une fiche de style tirée
+        {"layer":"locations"},
+        {"layer":"moods"},
+        {"use":"quality"}
+      ]
+    },
+    ...
+  ],
+  "actions":[                              // actions par image générée
+    {"id":"var","name":"Variantes","n":3},
+    {"id":"perso","name":"Prompt libre","prompt":"Take THIS image as the new reference. Then: {{USER}}"}
+  ],
+  "blocks":{                               // texte réutilisable
+    "face":"CRITICAL: preserve the exact face...",
+    "quality":"Masterpiece quality...",
+    "variations":"..."
+  },
+  "aiPackPrompt":"..."                     // consigne utilisée pour régénérer ce pack par IA
+}
+════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   2. VALIDATION DE PACK
+════════════════════════════════════════════════════════════════ */
+function validatePack(p){
+  if(!p||typeof p!=='object')return'Pack invalide (pas un objet)';
+  if(!p.id||!/^[a-z0-9\-_]{2,40}$/i.test(p.id))return'Champ "id" manquant ou invalide';
+  if(!p.name)return'Champ "name" manquant';
+  if(!Array.isArray(p.styles)||!p.styles.length)return'Aucun "styles"[] : un pack a besoin d\'au moins une fiche de style';
+  if(!Array.isArray(p.recipes)||!p.recipes.length)return'Aucun "recipes"[] : un pack a besoin d\'au moins une recette';
+  for(var i=0;i<p.styles.length;i++){
+    var s=p.styles[i];
+    if(!s.id||!s.name||!s.prompt)return'Style #'+i+' incomplet (id/name/prompt requis)';
+  }
+  for(var j=0;j<p.recipes.length;j++){
+    var r=p.recipes[j];
+    if(!r.id||!r.name)return'Recette #'+j+' incomplète (id/name requis)';
+    if(!Array.isArray(r.steps)||!r.steps.length)return'Recette "'+r.id+'" sans steps[]';
+  }
+  if(packById(p.id))return'Un pack avec l\'id "'+p.id+'" est déjà installé';
+  return null;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   3. GESTION DES PACKS
+════════════════════════════════════════════════════════════════ */
+function packById(id){return st.packs.find(function(p){return p.id===id})}
+function savePacks(){saveLS('fe_packs',st.packs)}
+function installPack(p,fromIA){
+  var err=validatePack(p);
+  if(err){toast('Pack refusé : '+err,'err');log('Pack refusé : '+err,'e');return false}
+  st.packs.push(p);savePacks();
+  log('Pack installé : '+p.name+' ('+p.styles.length+' styles, '+p.recipes.length+' recettes, '+(p.actions?p.actions.length:0)+' actions)','s');
+  toast((fromIA?'Pack généré et installé : ':'Pack installé : ')+p.name);
+  renderPacks();
+  return true;
+}
+function uninstallPack(id){
+  st.packs=st.packs.filter(function(p){return p.id!==id});
+  savePacks();renderPacks();
+  toast('Pack désinstallé','warn');
+}
+function exportPack(id){
+  var p=packById(id);
+  var blob=new Blob([JSON.stringify(p,null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='pack-'+p.id+'.json';a.click();
+}
+
+/* ════════════════════════════════════════════════════════════════
+   4. POOL DE CLÉS & APPELS API (identique au mécanisme éprouvé)
+════════════════════════════════════════════════════════════════ */
+function keysFromInput(){
+  var lines=($('keysIn').value||'').split(/\r?\n/).map(function(l){return l.trim()}).filter(Boolean);
+  return lines.filter(function(k){return k.indexOf('sk-')===0});
+}
+function saveKeys(){
+  var ks=keysFromInput();
+  var prev={};st.keys.forEach(function(k){prev[k.key]=k});
+  st.keys=ks.map(function(k){return prev[k]||{key:k,lastReq:0,cool:0,active:true,errors:0,count:0}});
+  saveLS('fe_keys',ks);
+  log(ks.length+' clé(s) enregistrée(s)','s');
+  toast(ks.length+' clé(s) enregistrée(s)');
+}
+function availKey(){
+  var now=Date.now(),iv=3000,av=[];
+  st.keys.forEach(function(k){if(k.active&&k.cool<=now&&(!k.lastReq||now-k.lastReq>=iv))av.push(k)});
+  if(!av.length)return null;
+  av.sort(function(a,b){return(a.count-b.count)||((a.lastReq||0)-(b.lastReq||0))});
+  return av[0];
+}
+function acquire(){
+  return new Promise(function(res,rej){
+    (function loop(){
+      if(st.stop)return rej(new Error('Arrêt'));
+      var k=availKey();
+      if(k){k.count++;k.lastReq=Date.now();return res(k)}
+      if(!st.keys.some(function(k){return k.active}))return rej(new Error('Aucune clé active'));
+      setTimeout(loop,250);
+    })();
+  });
+}
+function apiFetch(url,opts,tries){
+  tries=tries||5;var att=0,lastErr=null;
+  function next(){
+    if(att>=tries)return Promise.reject(lastErr||new Error('Échec API'));
+    if(st.stop)return Promise.reject(new Error('Arrêt'));
+    var cur=att++;
+    return acquire().then(function(k){
+      var headers=Object.assign({},opts.headers||{},{'Authorization':'Bearer '+k.key});
+      return fetch(url,Object.assign({},opts,{headers:headers})).then(function(r){
+        if(r.ok){k.errors=0;return r}
+        return r.clone().text().then(function(tx){
+          tx=(tx||'').slice(0,200);
+          if(r.status===401||r.status===403){
+            k.errors=(k.errors||0)+1;
+            if(k.errors>=3){k.active=false;log('Clé morte (401/403)','e')}
+            throw{status:r.status,message:'HTTP '+r.status};
+          }
+          if(r.status===400||r.status===404)throw{status:r.status,message:'HTTP '+r.status+' '+tx};
+          if(r.status===429){k.cool=Date.now()+65000;log('429 → cool 65s','w');return sleep(500).then(next)}
+          return sleep(2000+cur*1000).then(next);
+        });
+      }).catch(function(e){
+        if(e&&e.status)throw e;
+        lastErr=e;return sleep(1000+cur*700).then(next);
+      });
+    });
+  }
+  return next();
+}
+function genImage(prompt,ratio,src){
+  var body={model:st.api.mimg,prompt:String(prompt).slice(0,1900),n:1,size:'1K',ratio:ratio,extra_body:{response_format:'url'}};
+  if(src)body.image=[src];
+  return apiFetch(st.api.endpoint+'/images/generations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)},5)
+    .then(function(r){return r.json()}).then(function(d){
+      var it=d.data&&d.data[0];
+      if(!it)throw new Error('Pas d\'image');
+      if(it.url)return it.url;
+      if(it.b64_json)return'data:image/png;base64,'+it.b64_json;
+      throw new Error('Format inconnu');
+    });
+}
+function callText(system,user,maxTok){
+  var body={model:st.api.mtx,messages:[{role:'system',content:system},{role:'user',content:user}],temperature:0.7,max_tokens:maxTok||3000,reasoning_effort:'none'};
+  return apiFetch(st.api.endpoint+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)},3)
+    .then(function(r){return r.json()}).then(function(d){
+      var c=d.choices&&d.choices[0]&&d.choices[0].message;
+      return(c&&c.content)||null;
+    });
+}
+
+/* ════════════════════════════════════════════════════════════════
+   5. MOTEUR DE RECETTES — le cœur
+════════════════════════════════════════════════════════════════ */
+function pickStyle(pack){
+  return rnd(pack.styles);
+}
+function layerValue(pack,layer){
+  if(!pack.layers||!pack.layers[layer]||!pack.layers[layer].length)return'';
+  return rnd(pack.layers[layer]);
+}
+function buildPromptFromSteps(pack,steps,ctx){
+  /* ctx = {style, userText, srcURL, index} */
+  var parts=[];
+  steps.forEach(function(stp){
+    if(stp.use){
+      var b=pack.blocks&&pack.blocks[stp.use];
+      if(b)parts.push(b.replace(/\{\{USER\}\}/g,ctx.userText||'').replace(/\{\{STYLE\}\}/g,ctx.style?ctx.style.name:''));
+    }else if(stp.style&&ctx.style){
+      parts.push('ART STYLE: '+ctx.style.prompt+'.');
+    }else if(stp.layer){
+      var v=layerValue(pack,stp.layer);
+      if(v)parts.push(String(stp.label||stp.layer).toUpperCase()+': '+v+'.');
+    }else if(stp.text){
+      parts.push(stp.text.replace(/\{\{USER\}\}/g,ctx.userText||''));
+    }
+  });
+  return parts.join(' ');
+}
+function currentPack(){return packById($('packSel').value)}
+function currentRecipe(){
+  var p=currentPack();if(!p)return null;
+  return p.recipes.find(function(r){return r.id===$('recipeSel').value})||null;
+}
+function pickRatio(){
+  if(st.ratio==='mixed')return rnd(['1:1','1:1','9:16','16:9']);
+  return st.ratio;
+}
+
+/* ── FILE DE TRAVAIL ─────────────────────────────────────────── */
+function ensureWorkers(){
+  var MAX=4;
+  while(workers.length<MAX&&queue.length){
+    (function(task){
+      workers.push(1);
+      task().catch(function(e){log('Tâche échouée : '+(e.message||e),'e')}).then(function(){
+        workers.splice(workers.indexOf(1),1);
+        st.count++;updateBar();
+        if(!queue.length&&!workers.length)finishBatch();
+        else ensureWorkers();
+      });
+    })(queue.shift());
+  }
+}
+function finishBatch(){
+  st.running=false;
+  $('bStat').textContent='Terminé · '+st.count+' image(s)';
+  log('Recette terminée : '+st.count+' image(s)','s');
+  toast('Série terminée');
+}
+function updateBar(){
+  $('bProg').style.width=(st.total?Math.round(100*st.count/st.total):0)+'%';
+  if(st.running)$('bStat').textContent=st.count+' / '+st.total+' en cours…';
+}
+
+/* ── EXÉCUTION D'UNE RECETTE ──────────────────────────────────── */
+function runRecipe(){
+  var pack=currentPack(),rec=currentRecipe();
+  if(!pack||!rec){toast('Choisis un pack et une recette','warn');return}
+  var needsImg=(rec.inputs||[]).indexOf('image')>=0;
+  var needsTxt=(rec.inputs||[]).indexOf('text')>=0;
+  if(needsImg&&!st.img){toast('Cette recette exige une image de référence','warn');return}
+  if(needsTxt&&!($('briefIn').value||'').trim()){toast('Cette recette exige un texte/brief','warn');return}
+  if(!st.keys.length){toast('Ajoute au moins une clé API','warn');return}
+
+  var n=rec.count?(st.batch||10):1;
+  st.running=true;st.stop=false;st.count=0;st.total=n;
+  updateBar();log('Recette « '+rec.name+' » du pack « '+pack.name+' » — '+n+' image(s)','s');
+
+  var userText=$('briefIn').value.trim();
+  var src=rec.source==='generated'?null:st.img;
+
+  for(var i=0;i<n;i++){
+    (function(idx){
+      queue.push(function(){
+        var style=pickStyle(pack);
+        var ctx={style:style,userText:userText,index:idx};
+        var prompt=buildPromptFromSteps(pack,rec.steps,ctx);
+        return genImage(prompt,rec.ratio||pickRatio(),src).then(function(url){
+          addItem(pack,rec,style,url,prompt);
+        }).catch(function(e){
+          addError(pack,rec,style,e.message||String(e));
+        });
+      });
+    })(i);
+  }
+  ensureWorkers();
+}
+
+/* ── RENDU DES RÉSULTATS ─────────────────────────────────────── */
+var blkSeq=0;
+function addItem(pack,rec,style,url,prompt){
+  var id='it'+(++blkSeq);
+  var el=document.createElement('div');
+  el.className='blk';
+  el.id='blk-'+id;
+  el.innerHTML='<div class="bhead">'+
+    '<span class="bcat">'+esc(pack.icon||'✨')+' '+esc(pack.name)+'</span>'+
+    '<span class="bname">'+esc(style.name)+' · '+esc(rec.name)+'</span>'+
+    '<span class="btime">'+new Date().toLocaleTimeString('fr-FR')+'</span></div>'+
+    '<div class="bimg"><img src="'+esc(url)+'" alt=""></div>'+
+    '<div class="bacts" id="acts-'+id+'"></div>'+
+    '<div class="bmsg" id="msg-'+id+'"></div>';
+  $('stream').appendChild(el);
+  $('empty').style.display='none';
+  renderActs(pack,id,url,prompt);
+}
+function addError(pack,rec,style,msg){
+  var el=document.createElement('div');
+  el.className='blk err';
+  el.innerHTML='<div class="bhead"><span class="bcat">✕ Erreur</span><span class="bname">'+esc(style?style.name:'')+'</span></div>'+
+    '<div class="bimg"><div class="errmsg">'+esc(msg.slice(0,160))+'</div></div>';
+  $('stream').appendChild(el);
+}
+function renderActs(pack,id,url,prompt){
+  var el=$('acts-'+id);if(!el)return;
+  var html='<button class="bact" data-a="dl">📥 Télécharger</button>'+
+            '<button class="bact" data-a="zoom">🔍 Zoom</button>'+
+            '<button class="bact" data-a="prompt">✏️ Prompt</button>';
+  (pack.actions||[]).forEach(function(a,i){
+    html+='<button class="bact" data-act="'+i+'">'+esc(a.icon||'🎨')+' '+esc(a.name)+'</button>';
+  });
+  el.innerHTML=html;
+  el.querySelectorAll('.bact').forEach(function(btn){
+    btn.onclick=function(){
+      var a=btn.dataset.a;
+      if(a==='dl'){
+        fetch(url,{mode:'cors'}).then(function(r){return r.blob()}).then(function(b){
+          var link=document.createElement('a');link.href=URL.createObjectURL(b);link.download='forge-'+id+'.png';link.click();
+        }).catch(function(){window.open(url,'_blank')});
+      }else if(a==='zoom'){
+        window.open(url,'_blank');
+      }else if(a==='prompt'){
+        var m=$('msg-'+id);m.textContent=prompt;m.className='bmsg on ok';
+      }else{
+        runPackAction(pack,pack.actions[parseInt(btn.dataset.act)],url,prompt,id);
+      }
+    };
+  });
+}
+function runPackAction(pack,action,url,prompt,id){
+  /* Action = sous-recette appliquée à l'image générée */
+  var userText='';
+  if(action.ask){userText=(promptValue(action.ask)||'').trim();if(!userText)return}
+  var n=action.n||1;
+  var steps=action.steps||[{use:'ref'},{style:true},{use:'quality'}];
+  log('Action « '+action.name+' » — '+n+' image(s)','s');
+  for(var i=0;i<n;i++){
+    (function(){
+      queue.push(function(){
+        var style=pickStyle(pack);
+        var ctx={style:style,userText:userText};
+        var pr=buildPromptFromSteps(pack,steps,ctx);
+        return genImage(pr,action.ratio||pickRatio(),url).then(function(u){
+          var parent=document.getElementById('blk-'+id);
+          var wrap=document.createElement('div');wrap.className='node child';
+          wrap.innerHTML='<div class="blk" style="margin-top:8px"><div class="bhead"><span class="bcat">'+esc(action.icon||'🎨')+' '+esc(action.name)+'</span><span class="bname">'+esc(style.name)+'</span></div><div class="bimg"><img src="'+esc(u)+'"></div><div class="bmsg on ok">'+esc(pr.slice(0,300))+'</div></div>';
+          if(parent&&parent.parentNode)parent.parentNode.insertBefore(wrap,parent.nextSibling);else $('stream').appendChild(wrap);
+        }).catch(function(e){log('Action échouée : '+(e.message||e),'e')});
+      });
+    })();
+  }
+  ensureWorkers();
+}
+function promptValue(msg){
+  var v=window.prompt(msg||'Ta consigne :');
+  return v;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   6. GÉNÉRATION DE PACK PAR IA
+═════════════════════════════════════════════════════════════════ */
+var PACK_SYSTEM='Tu es un architecte de packs pour Forge Engine, un générateur d\'images modulaire. Tu réponds UNIQUEMENT avec du JSON valide, sans markdown, sans commentaire, sans backticks. Le JSON suit exactement ce schéma : {"id":"kebab-case-unique","name":"Nom","icon":"un-emoji","desc":"description","styles":[{"id":"s1","cat":"categorie","name":"Nom du style/artiste","prompt":"prompt de style en anglais, descriptif et précis"}],"layers":{"locations":["in a quiet gallery", "..."],"moods":["contemplative","..."]},"recipes":[{"id":"serie","name":"Nom de la recette","hint":"ce que ça produit","inputs":["image"],"source":"image","count":true,"steps":[{"use":"face"},{"style":true},{"layer":"locations"},{"layer":"moods"},{"use":"quality"}]}],"actions":[{"id":"var","name":"Variantes","icon":"🎨","n":3,"steps":[{"use":"ref"},{"style":true},{"use":"quality"}]}],"blocks":{"face":"instruction critique de préservation du visage","ref":"Take THIS image as the new reference.","quality":"Masterpiece quality, refined lighting, no watermark."}}. Règles : 8 à 20 styles, 1 à 4 recettes, 1 à 4 actions, tous les champs obligatoires comme dans le schéma. Les prompts de styles sont en anglais. Les "use" dans steps doivent exister dans blocks. Les "layer" doivent exister dans layers.';
+
+function tryParseJSON(txt){
+  txt=String(txt||'').trim().replace(/^```(json)?/,'').replace(/```$/,'');
+  var m=txt.indexOf('{'),e=txt.lastIndexOf('}');
+  if(m<0||e<0)return null;
+  var s=txt.slice(m,e+1);
+  try{return JSON.parse(s)}catch(err){}
+  /* Réparation 1 : apostrophes non échappées dans les chaînes.
+     On ré-échappe tout sauf les guillemets structurels. */
+  try{
+    var fixed='';
+    var inStr=false,esc2=false;
+    for(var i=0;i<s.length;i++){
+      var c=s[i];
+      if(esc2){fixed+=c;esc2=false;continue}
+      if(c==='\\'&&inStr){fixed+=c;esc2=true;continue}
+      if(c==='"'){inStr=!inStr;fixed+=c;continue}
+      if(inStr&&c==='\n'){fixed+='\\n';continue}
+      if(inStr&&c==='\t'){fixed+='\\t';continue}
+      if(inStr&&c==='\r'){continue}
+      fixed+=c;
+    }
+    return JSON.parse(fixed);
+  }catch(err2){}
+  /* Réparation 2 : tronque au dernier objet complet avant l'erreur. */
+  try{
+    var cut=s.lastIndexOf('}');
+    while(cut>0){
+      var cand=s.slice(0,cut+1);
+      /* ferme les tableaux ouverts */
+      var ob=cand.split('[').length-1,cb=cand.split(']').length-1;
+      if(cb<ob)cand+=']'.repeat(ob-cb);
+      var ob2=cand.split('{').length-1,cb2=cand.split('}').length-1;
+      if(cb2<ob2)cand+='}'.repeat(ob2-cb2);
+      try{return JSON.parse(cand)}catch(e3){}
+      cut=s.lastIndexOf('}',cut-1);
+    }
+  }catch(err3){}
+  return null;
+}
+function genPackViaIA(){
+  var desc=window.prompt('Décris le pack que l\'IA doit construire.\nExemples :\n- « les 30 plus grands photographes de mode, avec une recette série de portraits et une action variante »\n- « pack scénariste : moodboards et storyboards 9 cases à partir d\'un texte »\n- « pack monétisation TikTok sobre avec recettes A/B »');
+  if(!desc||!desc.trim())return;
+  if(!st.keys.length){toast('Ajoute d\'abord une clé API','warn');return}
+  toast('Génération du pack par l\'IA…');
+  log('Génération IA d\'un pack : '+desc,'s');
+  var REQ='Construis un pack pour ceci : '+desc.trim()+'. CONTRAINTES STRICTES DE FORMAT : réponds UNIQUEMENT du JSON valide sur une seule ligne de préférence. Dans toutes les chaînes JSON, échappe chaque apostrophe en \\u0027 et évite les guillemets doubles à l\'intérieur du texte. Jamais de commentaire. Donne 8 à 14 styles, exactement 2 recettes, exactement 2 actions. Chaque "steps" fait 4 à 6 éléments maximum. Reste concis : chaque prompt de style en une seule phrase anglaise de moins de 25 mots.';
+  function attempt(n,repairCtx){
+    return callText(PACK_SYSTEM,repairCtx?('Le JSON suivant est invalide. Erreur : '+repairCtx.err+'. Réponds avec une version corrigée et STRICTEMENT valide du pack demandé, même contenu, JSON seul :\n'+repairCtx.raw.slice(0,3000)):REQ,6000)
+      .then(function(txt){
+        if(!txt)throw new Error('Réponse vide');
+        var p=tryParseJSON(txt);
+        if(!p)throw{raw:txt,err:'JSON invalide'};
+        var vErr=validatePack(p);
+        if(vErr){
+          if(n<3)return attempt(n+1,{raw:txt,err:vErr});
+          throw new Error('Pack invalide : '+vErr);
+        }
+        installPack(p,true);
+      });
+  }
+  attempt(1,null).catch(function(e){
+    if(e&&e.raw){
+      log('Réponse IA non parsable, nouvelle tentative…','w');
+      return attempt(2,{raw:e.raw,err:'JSON parse error'});
+    }
+    toast('Échec génération pack : '+(e.message||e),'err');
+    log('Échec génération pack : '+(e.message||e),'e');
+  }).catch(function(e){
+    toast('Échec génération pack : '+(e.message||e),'err');
+    log('Échec génération pack : '+(e.message||e),'e');
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════
+   7. INTERFACE
+════════════════════════════════════════════════════════════════ */
+function renderPacks(){
+  var el=$('packList');
+  $('chipPacks').textContent=st.packs.length+' pack'+(st.packs.length>1?'s':'');
+  $('packBadge').textContent=st.packs.length;
+  if(!st.packs.length){el.innerHTML='<div class="hint">Aucun pack installé.</div>';}
+  else{
+    el.innerHTML=st.packs.map(function(p){
+      return'<div class="pack"><span class="pi">'+esc(p.icon||'📦')+'</span>'+
+      '<div class="pt"><div class="pn">'+esc(p.name)+' <span style="color:var(--faint);font-size:11px">'+esc(p.id)+'</span></div>'+
+      '<div class="pd">'+esc(p.desc||'')+'</div>'+
+      '<div style="margin-top:4px"><span class="pill">'+p.styles.length+' styles</span><span class="pill">'+p.recipes.length+' recettes</span><span class="pill">'+((p.actions||[]).length)+' actions</span></div></div>'+
+      '<div style="display:flex;flex-direction:column;gap:5px">'+
+      '<button class="btn sm" data-ex="'+esc(p.id)+'">📤</button>'+
+      '<button class="btn sm dng" data-un="'+esc(p.id)+'">🗑</button></div></div>';
+    }).join('');
+    el.querySelectorAll('[data-un]').forEach(function(b){b.onclick=function(){if(confirm('Désinstaller ce pack ?'))uninstallPack(b.dataset.un)}});
+    el.querySelectorAll('[data-ex]').forEach(function(b){b.onclick=function(){exportPack(b.dataset.ex)}});
+  }
+  var sel=$('packSel');
+  var cur=sel.value;
+  sel.innerHTML=st.packs.map(function(p){return'<option value="'+esc(p.id)+'">'+esc(p.icon||'📦')+' '+esc(p.name)+'</option>'}).join('');
+  if(packById(cur))sel.value=cur;
+  renderRecipes();
+}
+function renderRecipes(){
+  var p=currentPack();
+  var sel=$('recipeSel'),hint=$('recipeHint');
+  if(!p){sel.innerHTML='';sel.disabled=true;hint.textContent='—';$('packHint').textContent='Installe un pack pour commencer.';return}
+  sel.disabled=false;
+  var cur=sel.value;
+  sel.innerHTML=p.recipes.map(function(r){return'<option value="'+esc(r.id)+'">'+esc(r.name)+'</option>'}).join('');
+  var rec=p.recipes[0];
+  if(p.recipes.find(function(r){return r.id===cur})){sel.value=cur;rec=p.recipes.find(function(r){return r.id===cur})}
+  hint.textContent=rec?(rec.hint||''):''; 
+  $('packHint').textContent=p.desc||'';
+  var needsImg=rec&&(rec.inputs||[]).indexOf('image')>=0;
+  $('dropDe').textContent=needsImg?'Cette recette exige une image de référence.':'Cette recette travaille sans image : le texte suffit.';
+}
+function updateInputs(){
+  var rec=currentRecipe();
+  var briefF=document.querySelector('.f:nth-of-type(5)')||null;
+}
+
+/* ── Chargement image ─────────────────────────────────────────── */
+$('fileIn').onchange=function(){
+  var f=this.files[0];if(!f)return;
+  var fr=new FileReader();
+  fr.onload=function(){
+    st.img=fr.result;
+    var d=$('drop');
+    d.style.borderColor='var(--gold)';
+    d.querySelector('.ti').textContent='✓ Image chargée';
+  };
+  fr.readAsDataURL(f);
+};
+
+/* ── Persistance configuration ───────────────────────────────── */
+function loadCfg(){
+  st.packs=loadLS('fe_packs',[]);
+  var keys=loadLS('fe_keys',[]);
+  st.keys=keys.map(function(k){return{key:k,lastReq:0,cool:0,active:true,errors:0,count:0}});
+  if(keys.length)$('keysIn').value=keys.join('\n');
+  var ap=loadLS('fe_api',null);
+  if(ap){st.api=ap}
+  $('endpoint').value=st.api.endpoint;
+  $('mtx').value=st.api.mtx;
+  $('mimg').value=st.api.mimg;
+  renderPacks();
+  log('Moteur démarré — '+st.packs.length+' pack(s) installé(s)');
+}
+
+$('keysIn').addEventListener('change',saveKeys);
+$('saveApi').onclick=function(){
+  st.api={endpoint:$('endpoint').value.trim()||st.api.endpoint,mtx:$('mtx').value.trim()||st.api.mtx,mimg:$('mimg').value.trim()||st.api.mimg};
+  saveLS('fe_api',st.api);
+  toast('Connexion sauvegardée');log('API configurée : '+st.api.endpoint,'s');
+};
+$('packSel').onchange=renderRecipes;
+$('recipeSel').onchange=renderRecipes;
+document.querySelectorAll('#batchSeg button').forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll('#batchSeg button').forEach(function(x){x.classList.remove('on')});
+    b.classList.add('on');st.batch=parseInt(b.dataset.v);
+  };
+});
+$('ratio').onchange=function(){st.ratio=this.value};
+$('startBtn').onclick=runRecipe;
+$('playBtn').onclick=runRecipe;
+$('impPackBtn').onclick=function(){$('packFile').click()};
+$('packFile').onchange=function(){
+  var f=this.files[0];if(!f)return;
+  var fr=new FileReader();
+  fr.onload=function(){
+    try{installPack(JSON.parse(fr.result),false)}
+    catch(e){toast('JSON invalide : '+e.message,'err')}
+  };
+  fr.readAsText(f);
+};
+$('genPackBtn').onclick=genPackViaIA;
+
+loadCfg();
+
+/* ════════════════════════════════════════════════════════════════
+   8. PACK D'EXEMPLE — prouve l'architecture, désinstallable
+═════════════════════════════════════════════════════════════════
+   Ce pack ne fait partie PAS du moteur : c'est une donnée. N'importe
+   quel autre pack suit le même schéma. Copie-le, modifie-le, ou
+   génère le tien avec l'IA. Les 220 propositions = 220 packs
+   possibles sans toucher une ligne du moteur.
+════════════════════════════════════════════════════════════════ */
+if(!packById('pack-demo')){
+installPack({
+id:'pack-demo',
+name:'Pack démo — photographes & cinéma',
+icon:'📸',
+desc:'Pack d\'exemple : 6 fiches de style, 2 recettes (série stylée, dérivation par image), 2 actions. Sert de modèle pour tous les packs futurs.',
+profiles:['photographe','realisateur'],
+styles:[
+{id:'lindb',cat:'photo',name:'Peter Lindbergh',prompt:'Peter Lindbergh style: black and white portrait, natural light, no retouch, raw skin and soul, close crop'},
+{id:'avedon',cat:'photo',name:'Richard Avedon',prompt:'Richard Avedon style: bare white seamless backdrop, subject alone, sharp raking daylight, unposed honesty'},
+{id:'lei',cat:'photo',name:'Annie Leibovitz',prompt:'Annie Leibovitz style: elaborate staged portrait, theatrical single-source light, narrative props, composed gravity'},
+{id:'kub',cat:'cinema',name:'Kubrick',prompt:'Stanley Kubrick style: one-point perspective symmetrical corridor, cold clinical light, unnerving stillness'},
+{id:'tark',cat:'cinema',name:'Tarkovski',prompt:'Tarkovsky style: long meditative shot, water reflections, candlelight, painterly decay, spiritual stillness'},
+{id:'harc',cat:'studio',name:'Studio Harcourt',prompt:'Studio Harcourt portrait: dramatic side lighting on face, deep black background, luminous skin, glamorous mystery, silver halide grain'}
+],
+layers:{
+locations:['in a quiet gallery with white walls','on a windswept cliff overlooking the ocean','in a smoky 1940s jazz club','in a brutalist concrete plaza under fog','on a theater stage under a single spotlight'],
+moods:['contemplative','serene','dignified','mysterious','pensive']
+},
+recipes:[
+{id:'serie',name:'Série stylée (photo de référence)',hint:'10 à 40 images : même visage, un style différent par image',inputs:['image'],source:'image',count:true,
+ steps:[{use:'face'},{use:'expr'},{style:true},{layer:'locations',label:'location'},{layer:'moods',label:'mood'},{use:'quality'}]},
+{id:'texte',name:'Scène depuis un texte (sans image)',hint:'Le brief écrit devient le sujet ; un style par image',inputs:['text'],source:null,count:true,
+ steps:[{text:'SCENE: {{USER}}.'},{style:true},{layer:'locations',label:'location'},{layer:'moods',label:'mood'},{use:'quality'}]}
+],
+actions:[
+{id:'var',name:'Variantes',icon:'🎨',n:3,
+ steps:[{use:'ref'},{text:'SAME person, SAME art style, TOTALLY DIFFERENT pose, decor, lighting and era.'},{style:true},{use:'quality'}]},
+{id:'perso',name:'Prompt libre',icon:'✏️',n:1,ask:'Ta consigne pour dériver cette image :',
+ steps:[{use:'ref'},{text:'Apply this direction: {{USER}}.'},{style:true},{use:'quality'}]}
+],
+blocks:{
+face:'CRITICAL RULE — FACE PRESERVATION: the person in the output MUST be the EXACT SAME PERSON as in the reference image. Identical features, bone structure, eyes, nose, mouth, skin tone. Never beautify, never age.',
+expr:'The character faces the camera, head clearly visible, composed and intelligent expression.',
+ref:'Take THIS image as the new reference.',
+quality:'Masterpiece quality: refined lighting, professional color grading, high detail. No watermark, no signature.'
+}
+},false);
+}
+</script>
+</body>
+</html>
